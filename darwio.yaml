@@ -1,0 +1,56 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps-1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drawio
+  namespace: apps-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drawio
+  template:
+    metadata:
+      labels:
+        app: drawio
+    spec:
+      containers:
+        - name: drawio
+          image: jgraph/drawio:latest
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: drawio
+  namespace: apps-1
+spec:
+  selector:
+    app: drawio
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: drawio-ingressroute
+  namespace: apps-1
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Headers(`target`, `draw.io`)
+      kind: Rule
+      services:
+        - name: drawio
+          port: 80
+
+
